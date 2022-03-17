@@ -10,8 +10,7 @@ public class WikimediaProducer {
 
     private final Logger log = LoggerFactory.getLogger(WikimediaProducer.class);
 
-    private String topic;
-    private KafkaProducer<String, String> producer;
+    private final KafkaProducer<String, String> producer;
 
     public WikimediaProducer(String bootstrapServer, String topic) {
         Properties kafkaProperties = new Properties();
@@ -19,6 +18,13 @@ public class WikimediaProducer {
         kafkaProperties.setProperty(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServer);
         kafkaProperties.setProperty(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class.getName());
         kafkaProperties.setProperty(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, StringSerializer.class.getName());
+
+        // задержка перед отправкой для группировки сообщений
+        kafkaProperties.setProperty(ProducerConfig.LINGER_MS_CONFIG, "20");
+        // размер группы
+        kafkaProperties.setProperty(ProducerConfig.BATCH_SIZE_CONFIG, String.valueOf(32 * 1024));
+        // компрессия
+        kafkaProperties.setProperty(ProducerConfig.COMPRESSION_TYPE_CONFIG, "snappy");
 
         producer = new KafkaProducer<>(kafkaProperties);
     }
