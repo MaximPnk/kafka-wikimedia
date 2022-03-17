@@ -9,16 +9,16 @@ import java.net.URI;
 import java.util.Properties;
 import java.util.concurrent.TimeUnit;
 
-public class Main {
+public class ProducerMain {
 
-    private static final Logger log = LoggerFactory.getLogger(WikimediaProducer.class);
+    private static final Logger log = LoggerFactory.getLogger(KafkaWikimediaProducer.class);
     private static String url = "https://stream.wikimedia.org/v2/stream/recentchange";
 
     public static void main(String[] args) {
 
         String bootstrapServer = "", topic = "";
 
-        try (InputStream input = WikimediaProducer.class.getResourceAsStream("kafka.properties")) {
+        try (InputStream input = KafkaWikimediaProducer.class.getResourceAsStream("kafka.properties")) {
             Properties properties = new Properties();
             properties.load(input);
             bootstrapServer = properties.getProperty("kafka.host");
@@ -27,8 +27,8 @@ public class Main {
             log.error("Error while reading props", e);
         }
 
-        WikimediaProducer producer = new WikimediaProducer(bootstrapServer, topic);
-        EventHandler handler = new WikimediaHandler(producer.getProducer(), topic);
+        KafkaWikimediaProducer producer = new KafkaWikimediaProducer(bootstrapServer, topic);
+        EventHandler handler = new WikimediaEventHandler(producer.getProducer(), topic);
         EventSource source = new EventSource.Builder(handler, URI.create(url)).build();
 
         source.start();

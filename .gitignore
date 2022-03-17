@@ -1,4 +1,4 @@
 /.idea/
 **/target/
 **/*.iml
-/kafka-producer-wikimedia/src/main/resources/kafka.properties
+**/*.properties

@@ -5,14 +5,14 @@ import org.apache.kafka.clients.producer.ProducerRecord;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class WikimediaHandler implements EventHandler {
+public class WikimediaEventHandler implements EventHandler {
 
-    private final Logger log = LoggerFactory.getLogger(WikimediaHandler.class);
+    private final Logger log = LoggerFactory.getLogger(WikimediaEventHandler.class);
 
     private KafkaProducer<String, String> kafkaProducer;
     private String topic;
 
-    public WikimediaHandler(KafkaProducer<String, String> kafkaProducer, String topic) {
+    public WikimediaEventHandler(KafkaProducer<String, String> kafkaProducer, String topic) {
         this.kafkaProducer = kafkaProducer;
         this.topic = topic;
     }

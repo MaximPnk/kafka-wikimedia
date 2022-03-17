@@ -6,13 +6,13 @@ import org.slf4j.LoggerFactory;
 
 import java.util.Properties;
 
-public class WikimediaProducer {
+public class KafkaWikimediaProducer {
 
-    private final Logger log = LoggerFactory.getLogger(WikimediaProducer.class);
+    private final Logger log = LoggerFactory.getLogger(KafkaWikimediaProducer.class);
 
     private final KafkaProducer<String, String> producer;
 
-    public WikimediaProducer(String bootstrapServer, String topic) {
+    public KafkaWikimediaProducer(String bootstrapServer, String topic) {
         Properties kafkaProperties = new Properties();
 
         kafkaProperties.setProperty(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServer);

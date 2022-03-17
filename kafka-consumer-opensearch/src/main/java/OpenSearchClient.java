@@ -20,10 +20,8 @@ public class OpenSearchClient {
     private static final Logger log = LoggerFactory.getLogger(OpenSearchClient.class);
 
     private final RestHighLevelClient client;
-    private final String host;
 
-    public OpenSearchClient(String host) {
-        this.host = host;
+    public OpenSearchClient(String host) throws IOException {
         URI uri = URI.create(host);
         String userInfo = uri.getUserInfo();
 
@@ -37,28 +35,24 @@ public class OpenSearchClient {
                     .setHttpClientConfigCallback(httpAsyncClientBuilder -> httpAsyncClientBuilder.setDefaultCredentialsProvider(provider)
                             .setKeepAliveStrategy(new DefaultConnectionKeepAliveStrategy())));
         }
+
+        createIndex();
+    }
+
+    private void createIndex() throws IOException {
+        GetIndexRequest getIndexRequest = new GetIndexRequest("wikimedia");
+
+        if (!client.indices().exists(getIndexRequest, RequestOptions.DEFAULT)) {
+            CreateIndexRequest createIndexRequest = new CreateIndexRequest("wikimedia");
+            client.indices().create(createIndexRequest, RequestOptions.DEFAULT);
+            log.info("The wikimedia index has been created");
+        } else {
+            log.info("The wikimedia index already exists");
+        }
     }
 
     public RestHighLevelClient getClient() {
         return client;
-    }
-
-    public void createIndex() {
-        RestHighLevelClient client = new OpenSearchClient(host).getClient();
-
-        try (client) {
-            GetIndexRequest getIndexRequest = new GetIndexRequest("wikimedia");
-
-            if (!client.indices().exists(getIndexRequest, RequestOptions.DEFAULT)) {
-                CreateIndexRequest createIndexRequest = new CreateIndexRequest("wikimedia");
-                client.indices().create(createIndexRequest, RequestOptions.DEFAULT);
-                log.info("The wikimedia index has been created");
-            } else {
-                log.info("The wikimedia index already exists");
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
     }
 
 }
