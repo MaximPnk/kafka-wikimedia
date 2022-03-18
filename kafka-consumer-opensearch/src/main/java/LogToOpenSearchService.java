@@ -1,8 +1,9 @@
 import com.google.gson.JsonParser;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
+import org.opensearch.action.bulk.BulkRequest;
+import org.opensearch.action.bulk.BulkResponse;
 import org.opensearch.action.index.IndexRequest;
-import org.opensearch.action.index.IndexResponse;
 import org.opensearch.client.RequestOptions;
 import org.opensearch.common.xcontent.XContentType;
 import org.slf4j.Logger;
@@ -26,17 +27,16 @@ public class LogToOpenSearchService {
     public void send() throws IOException {
         while (true) {
             ConsumerRecords<String, String> records = kafkaWikimediaConsumer.getConsumer().poll(Duration.ofMillis(3000));
-            log.info("Received " + records.count() + " messages");
+            BulkRequest bulkRequest = new BulkRequest();
+            log.info("Received " + records.count() + " message(s)");
             for (ConsumerRecord<String, String> r : records) {
-//                String id = r.topic() + "_" + r.partition() + "_" + r.offset();
                 String id = extractId(r.value());
-                try {
-                    IndexRequest indexRequest = new IndexRequest("wikimedia").source(r.value(), XContentType.JSON).id(id);
-                    IndexResponse indexResponse = openSearchClient.getClient().index(indexRequest, RequestOptions.DEFAULT);
-//                    log.info(indexResponse.getId());
-                } catch (Exception e) {
-                    log.error("Fail to send message to elastic");
-                }
+                IndexRequest indexRequest = new IndexRequest("wikimedia").source(r.value(), XContentType.JSON).id(id);
+                bulkRequest.add(indexRequest);
+            }
+            if (bulkRequest.numberOfActions() > 0) {
+                BulkResponse bulkResponse = openSearchClient.getClient().bulk(bulkRequest, RequestOptions.DEFAULT);
+                log.info("Sent " + bulkResponse.getItems().length + " message(s)");
             }
             kafkaWikimediaConsumer.getConsumer().commitSync();
             log.info("Batch committed");
