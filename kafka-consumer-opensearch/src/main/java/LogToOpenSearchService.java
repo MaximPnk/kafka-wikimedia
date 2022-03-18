@@ -1,12 +1,9 @@
-import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.opensearch.action.index.IndexRequest;
 import org.opensearch.action.index.IndexResponse;
 import org.opensearch.client.RequestOptions;
-import org.opensearch.client.indices.CreateIndexRequest;
-import org.opensearch.client.indices.GetIndexRequest;
 import org.opensearch.common.xcontent.XContentType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -28,18 +25,21 @@ public class LogToOpenSearchService {
 
     public void send() throws IOException {
         while (true) {
-            ConsumerRecords<String, String> records = kafkaWikimediaConsumer.getConsumer().poll(Duration.ofMillis(100));
+            ConsumerRecords<String, String> records = kafkaWikimediaConsumer.getConsumer().poll(Duration.ofMillis(3000));
+            log.info("Received " + records.count() + " messages");
             for (ConsumerRecord<String, String> r : records) {
 //                String id = r.topic() + "_" + r.partition() + "_" + r.offset();
                 String id = extractId(r.value());
                 try {
                     IndexRequest indexRequest = new IndexRequest("wikimedia").source(r.value(), XContentType.JSON).id(id);
                     IndexResponse indexResponse = openSearchClient.getClient().index(indexRequest, RequestOptions.DEFAULT);
-                    log.info(indexResponse.getId());
+//                    log.info(indexResponse.getId());
                 } catch (Exception e) {
-                    log.error("Fail to send log to elastic", e);
+                    log.error("Fail to send message to elastic");
                 }
             }
+            kafkaWikimediaConsumer.getConsumer().commitSync();
+            log.info("Batch committed");
         }
     }
 

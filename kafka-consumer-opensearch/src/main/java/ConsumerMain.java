@@ -25,14 +25,14 @@ public class ConsumerMain {
             log.error("Error while reading properties", e);
         }
 
-        try {
+        try (KafkaWikimediaConsumer consumer = new KafkaWikimediaConsumer(kafkaHost, kafkaTopic)) {
             OpenSearchClient client = new OpenSearchClient(openSearchHost);
-            KafkaWikimediaConsumer consumer = new KafkaWikimediaConsumer(kafkaHost, kafkaTopic);
             LogToOpenSearchService service = new LogToOpenSearchService(consumer, client);
             service.send();
         } catch (IOException e) {
             log.error("Error while sending messages to OpenSearch", e);
         }
+
     }
 
 }
